@@ -1,23 +1,32 @@
-import threading
+"""
 import time
 import requests
 
-def download_site(url, session):
-    with session.get(url) as response:
-        print(response.content)
+CAT_API_URL = 'https://catfact.ninja/fact'
 
-def download_all_sites(sites):
-    with requests.Session() as session:
-        threads = []
-        for url in sites:
-            thread = threading.Thread(target=lambda: download_site(url, session))
-            thread.start()
-            threads.append(thread)
-        for thread in threads:
-            thread.join()
+cat_facts = []
+start = time.time()
+for _ in range(10):
+    cat_facts.append(requests.get(CAT_API_URL).json().get('fact'))
 
-sites = [f"https://catfact.ninja/fact" for i in range (1, 101)]
-startTime = time.time()
-download_all_sites(sites)
-endTime = time.time()
-print(f"Total time: {endTime - startTime}")
+print(f"Pobrano fakty w {time.time() - start} sekund")
+print(cat_facts)
+"""
+
+import time
+import requests
+from concurrent.futures import ThreadPoolExecutor
+
+CAT_API_URL = 'https://catfact.ninja/fact'
+
+cat_facts = []
+def fetch_cat_fact(n):
+    return requests.get(CAT_API_URL).json().get('fact')
+    
+if __name__ == "__main__":
+    start = time.time()
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        cat_facts = executor.map(fetch_cat_fact, range(10))
+
+    print(f"Pobrano fakty w {time.time() - start} sekund")
+    print(list(cat_facts))
